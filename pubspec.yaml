@@ -1,0 +1,61 @@
+name: driver_app
+description: "تطبيق السائق — نقل الشحنات بين الفروع"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # الحالة
+  flutter_bloc: ^8.1.6
+  equatable: ^2.0.7
+
+  # التنقل
+  go_router: ^14.6.2
+
+  # الشبكة
+  dio: ^5.7.0
+
+  # تخزين التوكن
+  flutter_secure_storage: ^9.2.2
+
+  # مسح الباركود
+  mobile_scanner: ^5.2.3
+
+  # طابور المزامنة وتفضيلات العرض
+  shared_preferences: ^2.3.3
+
+  # إبقاء الشاشة مضاءة أثناء المسح
+  wakelock_plus: ^1.2.8
+
+  # نغمة البدء
+  audioplayers: ^6.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.2
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/sounds/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#1A56E8"
+  adaptive_icon_foreground: "assets/icon/app_icon.png"

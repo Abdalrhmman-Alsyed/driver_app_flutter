@@ -1,0 +1,5 @@
+# اختبار الخادم الحقيقي لا يعمل ضمن التشغيل الافتراضي حتى لا ترتبط نتيجة
+# الاختبارات بالشبكة. لتشغيله:  flutter test --tags live
+tags:
+  live:
+    skip: "اختبار شبكة — شغّله بـ: flutter test --run-skipped --tags live"
