@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import 'app/router.dart';
 import 'core/network/api_client.dart';
@@ -15,8 +16,8 @@ import 'features/manifests/data/manifest_repository.dart';
 import 'features/manifests/data/models/manifest.dart';
 import 'features/org_units/data/org_unit_repository.dart';
 import 'features/parcels/data/parcel_repository.dart';
+import 'features/profile/data/profile_repository.dart';
 import 'features/trips/data/trip_repository.dart';
-import 'features/vehicle/data/vehicle_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,7 +61,7 @@ class _DriverAppState extends State<DriverApp> with WidgetsBindingObserver {
   late final _trips = TripRepository(widget.apiClient);
   late final _manifests = ManifestRepository(widget.apiClient);
   late final _parcels = ParcelRepository(widget.apiClient);
-  late final _vehicles = VehicleRepository(widget.apiClient);
+  late final _profiles = ProfileRepository(widget.apiClient);
 
   late final _authCubit = AuthCubit(
     authRepository: AuthRepository(
@@ -68,6 +69,7 @@ class _DriverAppState extends State<DriverApp> with WidgetsBindingObserver {
       storage: widget.tokenStorage,
     ),
     orgUnits: _orgUnits,
+    profiles: _profiles,
   );
 
   late final GoRouter _router = buildRouter(_authCubit);
@@ -96,39 +98,43 @@ class _DriverAppState extends State<DriverApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return MultiRepositoryProvider(
-      providers: [
-        RepositoryProvider.value(value: _orgUnits),
-        RepositoryProvider.value(value: _trips),
-        RepositoryProvider.value(value: _manifests),
-        RepositoryProvider.value(value: _parcels),
-        RepositoryProvider.value(value: _vehicles),
-        RepositoryProvider.value(value: widget.queue),
-      ],
-      child: MultiBlocProvider(
+    // الطابور ChangeNotifier: RepositoryProvider لا يُخطر التابعين بتغيّره.
+    // ملكيته لـ main()، فـ .value حتى لا يتخلّص منه هذا الودجت عند إزالته.
+    return ChangeNotifierProvider.value(
+      value: widget.queue,
+      child: MultiRepositoryProvider(
         providers: [
-          BlocProvider.value(value: _authCubit),
-          BlocProvider(create: (_) => ThemeCubit()),
+          RepositoryProvider.value(value: _orgUnits),
+          RepositoryProvider.value(value: _trips),
+          RepositoryProvider.value(value: _manifests),
+          RepositoryProvider.value(value: _parcels),
+          RepositoryProvider.value(value: _profiles),
         ],
-        child: BlocBuilder<ThemeCubit, ThemeMode>(
-          builder: (context, mode) {
-            return MaterialApp.router(
-              title: 'مسار',
-              debugShowCheckedModeBanner: false,
-              theme: AppTheme.light(),
-              darkTheme: AppTheme.dark(),
-              themeMode: mode,
-              routerConfig: _router,
-              // التطبيق عربي فقط، فالاتجاه RTL دائمًا.
-              locale: const Locale('ar'),
-              supportedLocales: const [Locale('ar')],
-              localizationsDelegates: const [
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-            );
-          },
+        child: MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: _authCubit),
+            BlocProvider(create: (_) => ThemeCubit()),
+          ],
+          child: BlocBuilder<ThemeCubit, ThemeMode>(
+            builder: (context, mode) {
+              return MaterialApp.router(
+                title: 'مسار',
+                debugShowCheckedModeBanner: false,
+                theme: AppTheme.light(),
+                darkTheme: AppTheme.dark(),
+                themeMode: mode,
+                routerConfig: _router,
+                // التطبيق عربي فقط، فالاتجاه RTL دائمًا.
+                locale: const Locale('ar'),
+                supportedLocales: const [Locale('ar')],
+                localizationsDelegates: const [
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

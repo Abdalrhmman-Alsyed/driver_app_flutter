@@ -37,7 +37,9 @@ class ProfilePage extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final mode = context.watch<ThemeCubit>().state;
     final auth = context.watch<AuthCubit>().state;
-    final session = auth is AuthSignedIn ? auth.session : null;
+    final signedIn = auth is AuthSignedIn ? auth : null;
+    final session = signedIn?.session;
+    final profile = signedIn?.profile;
 
     return Scaffold(
       appBar: AppBar(title: const Text('حسابي')),
@@ -57,7 +59,7 @@ class ProfilePage extends StatelessWidget {
                   radius: 36,
                   backgroundColor: p.primaryContainer,
                   child: Text(
-                    session?.initials ?? '؟',
+                    signedIn?.initials ?? '؟',
                     style: text.headlineSmall?.copyWith(
                       color: p.onPrimaryContainer,
                       fontWeight: FontWeight.w700,
@@ -66,22 +68,41 @@ class ProfilePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  session?.identity ?? 'سائق',
+                  signedIn?.displayName ?? 'سائق',
                   style:
                       text.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  profile?.email ?? session?.email ?? '',
+                  style: text.bodySmall?.copyWith(color: p.textSecondary),
                 ),
                 const SizedBox(height: 18),
                 Divider(color: p.border, height: 1),
                 const SizedBox(height: 12),
-                _Row(
-                  icon: Icons.badge_outlined,
-                  label: 'الصفة',
-                  value: 'سائق',
-                ),
+                if (profile?.phone case final phone? when phone.isNotEmpty)
+                  _Row(
+                    icon: Icons.phone_outlined,
+                    label: 'الهاتف',
+                    value: phone,
+                  ),
+                if (profile?.employeeCode case final code? when code.isNotEmpty)
+                  _Row(
+                    icon: Icons.badge_outlined,
+                    label: 'الرمز الوظيفي',
+                    value: code,
+                  ),
+                if (profile?.branchName case final branch?
+                    when branch.isNotEmpty)
+                  _Row(
+                    icon: Icons.store_outlined,
+                    label: 'الفرع',
+                    value: branch,
+                  ),
                 _Row(
                   icon: Icons.local_shipping_outlined,
-                  label: 'المركبة المسندة',
-                  value: session?.vehicleId == null ? 'لا توجد' : 'مسندة',
+                  label: 'المركبة',
+                  value: profile?.vehicle?.plateNumber ?? 'لا توجد',
                 ),
               ],
             ),

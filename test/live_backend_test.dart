@@ -10,7 +10,7 @@ import 'package:driver_app/features/manifests/data/manifest_repository.dart';
 import 'package:driver_app/features/org_units/data/org_unit_repository.dart';
 import 'package:driver_app/features/parcels/data/parcel_repository.dart';
 import 'package:driver_app/features/trips/data/trip_repository.dart';
-import 'package:driver_app/features/vehicle/data/vehicle_repository.dart';
+import 'package:driver_app/features/profile/data/profile_repository.dart';
 
 /// يستبدل المخزن المشفّر بذاكرة عادية: الإضافة الأصلية تحتاج قناة منصّة
 /// غير متاحة في بيئة الاختبار.
@@ -58,7 +58,7 @@ void main() {
     api = ApiClient(tokenStorage: storage);
   });
 
-  test('التدفّق كاملًا من الدخول إلى بيانات الطرد', () async {
+  test('الدخول والرحلات والملف الشخصي', () async {
     final auth = AuthRepository(api: api, storage: storage);
 
     final session = await auth.login(
@@ -86,8 +86,12 @@ void main() {
       reason: 'ظهرت رحلة لا تخص هذا السائق',
     );
 
-    final vehicle = await VehicleRepository(api).details(session.vehicleId!);
-    expect(vehicle.plateNumber, isNotEmpty);
+    // كل ما تعرضه شاشتا «حسابي» و«مركبتي» يأتي من نداء واحد.
+    final profile = await ProfileRepository(api).getMyProfile();
+    expect(profile.fullName, isNotEmpty, reason: 'الاسم الحقيقي لا البريد');
+    expect(profile.isDriver, isTrue);
+    expect(profile.id, session.driverId);
+    expect(profile.vehicle?.plateNumber, isNotEmpty);
 
     if (trips.isNotEmpty) {
       final manifests = await ManifestRepository(api).forTrip(trips.first.id);
@@ -95,6 +99,14 @@ void main() {
         expect(manifest.tripId, trips.first.id);
       }
     }
+  }, timeout: const Timeout(Duration(seconds: 90)));
+
+  /// المسح هو جوهر التطبيق، وهذه النقطة الوحيدة التي يقرأ منها السائق طردًا.
+  /// اختبار مستقلّ كي يبقى فشله مقروءًا: إخفاقه يعني أن صلاحية السائق على
+  /// التتبّع لم تُنشر بعد، لا أن بقية التطبيق معطوبة.
+  test('السائق يقرأ طردًا برقم التتبع', () async {
+    final auth = AuthRepository(api: api, storage: storage);
+    await auth.login(email: 'driver@fastship.com', password: 'password123');
 
     final parcel =
         await ParcelRepository(api).byTrackingNumber('TRK-2026-0002');

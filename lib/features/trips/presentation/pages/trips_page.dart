@@ -92,7 +92,7 @@ class _Greeting extends StatelessWidget {
     final p = context.colors;
     final text = Theme.of(context).textTheme;
     final auth = context.watch<AuthCubit>().state;
-    final identity = auth is AuthSignedIn ? auth.session.identity : '';
+    final identity = auth is AuthSignedIn ? auth.displayName : '';
 
     final hour = DateTime.now().hour;
     final greeting = switch (hour) {
@@ -109,7 +109,7 @@ class _Greeting extends StatelessWidget {
             radius: 22,
             backgroundColor: p.primaryContainer,
             child: Text(
-              auth is AuthSignedIn ? auth.session.initials : '؟',
+              auth is AuthSignedIn ? auth.initials : '؟',
               style: text.titleMedium?.copyWith(
                 color: p.onPrimaryContainer,
                 fontWeight: FontWeight.w700,
@@ -196,6 +196,17 @@ class _TripCard extends StatelessWidget {
 
   final Trip trip;
 
+  /// صفحة التفاصيل تبدأ الرحلة وتنهيها، والقائمة لا تسمع بذلك؛ فنعيد التحميل
+  /// عند الرجوع بدل أن تبقى البطاقة على حالة قديمة حتى السحب اليدوي.
+  ///
+  /// نمسك الكيوبت قبل الانتظار: مالكه `HomePage` لا هذه البطاقة، فقد تُزال
+  /// البطاقة من الشجرة بينما القائمة نفسها ما زالت حيّة.
+  Future<void> _openDetails(BuildContext context) async {
+    final trips = context.read<TripsCubit>();
+    await context.push('/trips/${trip.id}');
+    await trips.refresh();
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = context.colors;
@@ -214,7 +225,7 @@ class _TripCard extends StatelessWidget {
       color: p.surfaceElevated,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
-        onTap: () => context.push('/trips/${trip.id}'),
+        onTap: () => _openDetails(context),
         borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(16),

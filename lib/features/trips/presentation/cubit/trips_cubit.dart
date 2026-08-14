@@ -54,6 +54,10 @@ class TripsCubit extends Cubit<TripsState> {
   final String driverId;
 
   Future<void> load({TripStatus? filter, bool replaceFilter = false}) async {
+    // القائمة تُحدَّث أيضًا عند الرجوع من صفحة التفاصيل، وقد تكون الجلسة
+    // انتهت بينها فأُغلق الكيوبت — والإصدار بعد الإغلاق يرمي استثناءً.
+    if (isClosed) return;
+
     final effectiveFilter = replaceFilter ? filter : (filter ?? state.filter);
 
     emit(state.copyWith(
@@ -68,8 +72,10 @@ class TripsCubit extends Cubit<TripsState> {
         driverId: driverId,
         status: effectiveFilter,
       );
+      if (isClosed) return;
       emit(state.copyWith(trips: trips, isLoading: false));
     } on ApiException catch (error) {
+      if (isClosed) return;
       emit(state.copyWith(isLoading: false, error: error.message));
     }
   }

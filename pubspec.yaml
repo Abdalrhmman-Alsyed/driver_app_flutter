@@ -18,6 +18,8 @@ dependencies:
   # الحالة
   flutter_bloc: ^8.1.6
   equatable: ^2.0.7
+  # طابور المزامنة ChangeNotifier وليس Bloc، فيحتاج مزوّده الخاص.
+  provider: ^6.1.2
 
   # التنقل
   go_router: ^14.6.2
